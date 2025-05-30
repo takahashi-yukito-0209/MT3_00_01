@@ -344,52 +344,62 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2)
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMattrix)
 {
 
-    const float kGridHalfWidth = 2.0f; // Gridの半分の幅
+    const float kGridHalfWidth = 3.0f; // Gridの半分の幅
     const uint32_t kSubdivision = 10; // 分割数
     const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision); // 1つ分の長さ
 
     // 奥から手前への線を順々に引いていく
     for (uint32_t xIndex = 0; xIndex <= kSubdivision; xIndex++) {
-        
+
         // 上の情報を使ってワールド座標系上の始点と終点を求める
         Vector3 start = { float(-(kSubdivision / 2.0f) + xIndex) * kGridEvery, 0.0f, float(-kGridHalfWidth) };
         Vector3 end = { float(-(kSubdivision / 2.0f) + xIndex) * kGridEvery, 0.0f, float(kGridHalfWidth) };
-        
+
         // スクリーン座標系まで変換をかける
         start = Transform(Transform(start, viewProjectionMatrix), viewportMattrix);
         end = Transform(Transform(end, viewProjectionMatrix), viewportMattrix);
 
         // 変換した座標を使って表示。色は薄い灰色(0xAAAAAAFF),原点は黒ぐらいがよいが、なんでも良い
-        Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xAAAAAAFF);
+        if (xIndex == kSubdivision / 2.0f) {
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0x000000FF);
+        } else {
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFF0000FF);
+        }
     }
 
     // 左から右も同じように順々に引いていく
     for (uint32_t zIndex = 0; zIndex <= kSubdivision; zIndex++) {
-        
+
         // 奥から手前が左右に変わるだけ
         Vector3 start = { float(-kGridHalfWidth), 0.0f, float(-(kSubdivision / 2.0f) + zIndex) * kGridEvery };
         Vector3 end = { float(kGridHalfWidth), 0.0f, float(-(kSubdivision / 2.0f) + zIndex) * kGridEvery };
-        
+
         // スクリーン座標系まで変換をかける
         start = Transform(Transform(start, viewProjectionMatrix), viewportMattrix);
         end = Transform(Transform(end, viewProjectionMatrix), viewportMattrix);
 
         // 変換した座標を使って表示。色は薄い灰色(0xAAAAAAFF),原点は黒ぐらいがよいが、なんでも良い
-        Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xAAAAAAFF);
+        if (zIndex == kSubdivision / 2.0f) {
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0x000000FF);
+        } else {
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFF0000FF);
+        }
     }
 }
 
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
 {
-    const uint32_t kSubdivision = 10; // 分割数
+    const uint32_t kSubdivision = 16; // 分割数
     const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
     const float kLatEvery = float(M_PI) / kSubdivision; // 緯度分割1つ分の角度
+
     // 緯度の方向に分割　-π/2 ~ π/2
     for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++) {
         float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex; // 現在の緯度
         // 経度の方向に分割　0 ~ 2π
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++) {
             float lon = lonIndex * kLonEvery; // 現在の経度
+
             // world座標系でのa,b,cを求める
             Vector3 a, b, c;
             a = { cosf(lat) * cosf(lon), sinf(lat), cosf(lat) * sinf(lon) };
@@ -423,6 +433,20 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
     }
 }
 
+void ShowSettingsWindow(Sphere& sphere,Vector3& translate,Vector3& rotate)
+{
+    // ウィンドウサイズ初期設定
+    ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Window");
+    // 項目パラメータをいじれるようにe
+    ImGui::DragFloat3("CamraTranslate", &translate.x, 0.01f);
+    ImGui::DragFloat3("CameraRotate", &rotate.x, 0.01f);
+    ImGui::DragFloat3("SphereCenter", &sphere.center.x, -0.01f);
+    ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+
+    ImGui::End();
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -437,7 +461,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Vector3 rotate = {};
     Vector3 translate = {};
 
-    unsigned int color = 0xAAAAAAFF;
+    unsigned int color = 0xFF0000FF;
 
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
@@ -463,13 +487,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓更新処理ここから
         ///
 
+        ShowSettingsWindow(sphere, cameraTranslate, cameraRotate);
+
         Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
         Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, rotate, cameraPosition);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);
         Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
         Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
         Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-
+        
         ///
         /// ↑更新処理ここまで
         ///

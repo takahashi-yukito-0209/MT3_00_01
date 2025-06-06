@@ -438,7 +438,7 @@ void ShowSettingsWindow(Sphere& sphere, Vector3& rotate,Vector3& translate)
     // ウィンドウサイズ初期設定
     ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
     ImGui::Begin("Window");
-    // 項目パラメータをいじれるようにe
+    // 項目パラメータをいじれるように
     ImGui::DragFloat3("CamraTranslate", &translate.x, 0.01f);
     ImGui::DragFloat3("CameraRotate", &rotate.x, 0.01f);
     ImGui::DragFloat3("SphereCenter", &sphere.center.x, -0.01f);

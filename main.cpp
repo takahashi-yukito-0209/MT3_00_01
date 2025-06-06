@@ -433,7 +433,7 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
     }
 }
 
-void ShowSettingsWindow(Sphere& sphere,Vector3& translate,Vector3& rotate)
+void ShowSettingsWindow(Sphere& sphere, Vector3& rotate,Vector3& translate)
 {
     // ウィンドウサイズ初期設定
     ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
@@ -458,19 +458,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     char keys[256] = { 0 };
     char preKeys[256] = { 0 };
 
-    Vector3 rotate = {};
-    Vector3 translate = {};
-
     unsigned int color = 0xFF0000FF;
 
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
     Vector3 cameraRotate = { 0.26f, 0.0f, 0.0f };
-    Vector3 cameraPosition = { 0.0f, 0.0f, 10.0f };
+    Vector3 cameraPosition = { 0.0f, 0.0f, -10.0f };
 
     Sphere sphere;
     sphere.center.x = 0.0f;
-    sphere.center.y = -2.0f;
+    sphere.center.y = 0.0f;
     sphere.center.z = 0.0f;
     sphere.radius = 1.0f;
 
@@ -487,13 +484,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓更新処理ここから
         ///
 
-        ShowSettingsWindow(sphere, cameraTranslate, cameraRotate);
+        ShowSettingsWindow(sphere, cameraRotate,cameraTranslate);
 
-        Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
-        Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, rotate, cameraPosition);
+        Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);
         Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-        Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+        Matrix4x4 viewProjectionMatrix =Multiply(viewMatrix, projectionMatrix);
         Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
         
         ///
@@ -504,8 +500,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓描画処理ここから
         ///
 
-        DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-        DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, color);
+        DrawGrid(viewProjectionMatrix, viewportMatrix);
+        DrawSphere(sphere, viewProjectionMatrix, viewportMatrix, color);
 
         ///
         /// ↑描画処理ここまで

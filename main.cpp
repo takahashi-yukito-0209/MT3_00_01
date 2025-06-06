@@ -344,7 +344,7 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2)
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMattrix)
 {
 
-    const float kGridHalfWidth = 3.0f; // Gridの半分の幅
+    const float kGridHalfWidth = 2.0f; // Gridの半分の幅
     const uint32_t kSubdivision = 10; // 分割数
     const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision); // 1つ分の長さ
 

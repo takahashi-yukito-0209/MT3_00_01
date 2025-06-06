@@ -490,7 +490,7 @@ void ShowSettingsWindow(Vector3& Point,Segment& Segment,Vector3& Project)
     // ウィンドウサイズ初期設定
     ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
     ImGui::Begin("Window");
-    // 項目パラメータをいじれるようにe
+    // 項目パラメータをいじれるように
     ImGui::DragFloat3("Point", &Point.x, 0.01f);
     ImGui::DragFloat3("Segment origin", &Segment.origin.x, 0.01f);
     ImGui::DragFloat3("Segment diff", &Segment.diff.x, -0.01f);

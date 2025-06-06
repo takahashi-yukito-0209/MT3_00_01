@@ -393,42 +393,64 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
     const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
     const float kLatEvery = float(M_PI) / kSubdivision; // 緯度分割1つ分の角度
 
-    // 緯度の方向に分割　-π/2 ~ π/2
+    // 緯度方向の分割
     for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++) {
-        float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex; // 現在の緯度
-        // 経度の方向に分割　0 ~ 2π
+        float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex;
+        float nextLat = lat + kLatEvery;
+
+        // 経度方向の分割
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++) {
-            float lon = lonIndex * kLonEvery; // 現在の経度
+            float lon = lonIndex * kLonEvery;
+            float nextLon = lon + kLonEvery;
 
-            // world座標系でのa,b,cを求める
-            Vector3 a, b, c;
-            a = { cosf(lat) * cosf(lon), sinf(lat), cosf(lat) * sinf(lon) };
-            b = { cosf(lat + kLatEvery) * cosf(lon), sinf(lat + kLatEvery), cosf(lat + kLatEvery) * sinf(lon) };
-            c = { cosf(lat) * cosf(lon + kLonEvery), sinf(lat), cosf(lat) * sinf(lon + kLonEvery) };
+            // 球面上の4頂点
+            Vector3 a = {
+                cosf(lat) * cosf(lon),
+                sinf(lat),
+                cosf(lat) * sinf(lon)
+            };
+            Vector3 b = {
+                cosf(nextLat) * cosf(lon),
+                sinf(nextLat),
+                cosf(nextLat) * sinf(lon)
+            };
+            Vector3 c = {
+                cosf(nextLat) * cosf(nextLon),
+                sinf(nextLat),
+                cosf(nextLat) * sinf(nextLon)
+            };
+            Vector3 d = {
+                cosf(lat) * cosf(nextLon),
+                sinf(lat),
+                cosf(lat) * sinf(nextLon)
+            };
 
-            a.x = a.x * sphere.radius + sphere.center.x;
-            a.y = a.y * sphere.radius + sphere.center.y;
-            a.z = a.z * sphere.radius + sphere.center.z;
+            // 半径と中心の反映（ワールド座標系へ変換）
+            // 頂点を配列にまとめる
+            Vector3 vertices[4] = { a, b, c, d };
 
-            b.x = b.x * sphere.radius + sphere.center.x;
-            b.y = b.y * sphere.radius + sphere.center.y;
-            b.z = b.z * sphere.radius + sphere.center.z;
+            // 各頂点に対して処理を行う
+            for (int i = 0; i < 4; ++i) {
+                vertices[i].x = vertices[i].x * sphere.radius + sphere.center.x;
+                vertices[i].y = vertices[i].y * sphere.radius + sphere.center.y;
+                vertices[i].z = vertices[i].z * sphere.radius + sphere.center.z;
 
-            c.x = c.x * sphere.radius + sphere.center.x;
-            c.y = c.y * sphere.radius + sphere.center.y;
-            c.z = c.z * sphere.radius + sphere.center.z;
+                vertices[i] = Transform(vertices[i], viewProjectionMatrix);
+                vertices[i] = Transform(vertices[i], viewportMatrix);
+            }
 
-            // a,b,c,をScreen座標系まで変換
-            a = Transform(a, viewProjectionMatrix);
-            a = Transform(a, viewportMatrix);
-            b = Transform(b, viewProjectionMatrix);
-            b = Transform(b, viewportMatrix);
-            c = Transform(c, viewProjectionMatrix);
-            c = Transform(c, viewportMatrix);
+            // 処理後の頂点を元の変数に戻す
+            a = vertices[0];
+            b = vertices[1];
+            c = vertices[2];
+            d = vertices[3];
 
-            // ab,bcで線を引く
+
+            // 各辺を描画
             Novice::DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), color);
             Novice::DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), color);
+            Novice::DrawLine(int(c.x), int(c.y), int(d.x), int(d.y), color);
+            Novice::DrawLine(int(d.x), int(d.y), int(a.x), int(a.y), color);
         }
     }
 }

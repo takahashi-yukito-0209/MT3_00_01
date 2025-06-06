@@ -396,7 +396,7 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2)
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMattrix)
 {
 
-    const float kGridHalfWidth = 3.0f; // Gridの半分の幅
+    const float kGridHalfWidth = 2.0f; // Gridの半分の幅
     const uint32_t kSubdivision = 10; // 分割数
     const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision); // 1つ分の長さ
 
@@ -605,7 +605,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         Sphere pointSphere = { point, 0.01f };
         Sphere closestPointSphere = { closestPoint, 0.01f };
 
-        Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraPosition);
+        Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);
         Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
         Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);

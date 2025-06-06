@@ -485,20 +485,6 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
     }
 }
 
-void ShowSettingsWindow(Vector3& Point,Segment& Segment,Vector3& Project)
-{
-    // ウィンドウサイズ初期設定
-    ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Window");
-    // 項目パラメータをいじれるようにe
-    ImGui::DragFloat3("Point", &Point.x, 0.01f);
-    ImGui::DragFloat3("Segment origin", &Segment.origin.x, 0.01f);
-    ImGui::DragFloat3("Segment diff", &Segment.diff.x, -0.01f);
-    ImGui::InputFloat3("Project", &Project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-
-    ImGui::End();
-}
-
 Vector3 Project(const Vector3& v1, const Vector3& v2)
 {
     // v1 と v2 の内積
@@ -560,6 +546,8 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
     };
 }
 
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -573,13 +561,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // 変数宣言
 
+    unsigned int color = 0xFFFFFFFF;
+
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
     Vector3 cameraRotate = { 0.26f, 0.0f, 0.0f };
     Vector3 cameraPosition = { 0.0f, 0.0f, -10.0f };
 
-    Segment segment = { { -2.0f, -1.0f, 0.0f }, { 3.0f, 2.0f, 2.0f } };
-    Vector3 point = { -1.5f, 0.6f, 0.6f };
+    Sphere sphere[2];
+    sphere[0].center.x = 0.0f;
+    sphere[0].center.y = 0.0f;
+    sphere[0].center.z = 0.0f;
+    sphere[0].radius = 1.0f;
+    sphere[1].center.x = 0.0f;
+    sphere[1].center.y = 0.0f;
+    sphere[1].center.z = -5.0f;
+    sphere[1].radius = 0.5f;
 
     // ウィンドウの×ボタンが押されるまでループ
     while (Novice::ProcessMessage() == 0) {
@@ -594,16 +591,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓更新処理ここから
         ///
 
-        // pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
-        Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
+        // ウィンドウサイズ初期設定
+        ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Window");
+        // 項目パラメータをいじれるように
+        ImGui::DragFloat3("Sphere[0].Center", &sphere[0].center.x, 0.1f);
+        ImGui::DragFloat("Sphere[0].Radius", &sphere[0].radius, 0.1f, 0.0f);
+        ImGui::DragFloat3("Sphere[1].Center", &sphere[1].center.x, 0.1f);
+        ImGui::DragFloat("Sphere[1].Radius", &sphere[1].radius, 0.1f, 0.0f);
 
-        ShowSettingsWindow(point, segment, project);
+        ImGui::End();
 
-            // この値が線分上の点を表す
-        Vector3 closestPoint = ClosestPoint(point, segment);
-
-        Sphere pointSphere = { point, 0.01f };
-        Sphere closestPointSphere = { closestPoint, 0.01f };
 
         Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -611,9 +609,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
         Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-        Vector3 start = Transform(Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
-        Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
-
+        
         ///
         /// ↑更新処理ここまで
         ///
@@ -623,9 +619,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ///
 
         DrawGrid(viewProjectionMatrix, viewportMatrix);
-        Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
-        DrawSphere(pointSphere, viewProjectionMatrix, viewportMatrix, RED);
-        DrawSphere(closestPointSphere, viewProjectionMatrix, viewportMatrix, BLACK);
+        for (int i = 0; i < 2; i++) {
+            DrawSphere(sphere[i], viewProjectionMatrix, viewportMatrix, color);
+        }
 
         ///
         /// ↑描画処理ここまで

@@ -576,19 +576,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
     Vector3 cameraRotate = { 0.26f, 0.0f, 0.0f };
-    Vector3 cameraPosition = { 0.0f, 0.0f, 10.0f };
+    Vector3 cameraPosition = { 0.0f, 0.0f, -10.0f };
 
     Segment segment = { { -2.0f, -1.0f, 0.0f }, { 3.0f, 2.0f, 2.0f } };
     Vector3 point = { -1.5f, 0.6f, 0.6f };
-
-    // pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
-    Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
-
-    // この値が線分上の点を表す
-    Vector3 closestPoint = ClosestPoint(point, segment);
-
-    Sphere pointSphere = { point, 0.01f };
-    Sphere closestPointSphere = { closestPoint, 0.01f };
 
     // ウィンドウの×ボタンが押されるまでループ
     while (Novice::ProcessMessage() == 0) {
@@ -603,7 +594,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓更新処理ここから
         ///
 
+        // pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
+        Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
+
         ShowSettingsWindow(point, segment, project);
+
+            // この値が線分上の点を表す
+        Vector3 closestPoint = ClosestPoint(point, segment);
+
+        Sphere pointSphere = { point, 0.01f };
+        Sphere closestPointSphere = { closestPoint, 0.01f };
 
         Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraPosition);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -622,6 +622,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓描画処理ここから
         ///
 
+        DrawGrid(viewProjectionMatrix, viewportMatrix);
         Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
         DrawSphere(pointSphere, viewProjectionMatrix, viewportMatrix, RED);
         DrawSphere(closestPointSphere, viewProjectionMatrix, viewportMatrix, BLACK);

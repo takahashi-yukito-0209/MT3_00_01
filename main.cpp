@@ -10,6 +10,16 @@ const char kWindowTitle[] = "LE2C_17_タカハシ_ユキト_MT3_02_00";
 
 struct Vector3 {
     float x, y, z;
+
+    Vector3 operator-(const Vector3& other) const
+    {
+        return { x - other.x, y - other.y, z - other.z };
+    }
+
+    float LengthSq() const
+    {
+        return x * x + y * y + z * z;
+    }
 };
 
 struct Matrix4x4 {
@@ -415,7 +425,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
         if (xIndex == kSubdivision / 2.0f) {
             Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0x000000FF);
         } else {
-            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFF0000FF);
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFFFFFFFF);
         }
     }
 
@@ -434,7 +444,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
         if (zIndex == kSubdivision / 2.0f) {
             Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0x000000FF);
         } else {
-            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFF0000FF);
+            Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), 0xFFFFFFFF);
         }
     }
 }
@@ -546,7 +556,14 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
     };
 }
 
-
+// 球同士が衝突しているか
+bool IsCollision(const Sphere& s1, const Sphere& s2)
+{
+    Vector3 diff = s1.center - s2.center; // 減算オーバーロード使用
+    float distanceSq = diff.LengthSq(); // 長さの2乗で距離を判定
+    float radiusSum = s1.radius + s2.radius;
+    return distanceSq <= radiusSum * radiusSum;
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -560,23 +577,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     char preKeys[256] = { 0 };
 
     // 変数宣言
-
-    unsigned int color = 0xFFFFFFFF;
-
+    
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
     Vector3 cameraRotate = { 0.26f, 0.0f, 0.0f };
     Vector3 cameraPosition = { 0.0f, 0.0f, -10.0f };
 
+    //球体
     Sphere sphere[2];
     sphere[0].center.x = 0.0f;
     sphere[0].center.y = 0.0f;
-    sphere[0].center.z = 0.0f;
-    sphere[0].radius = 1.0f;
+    sphere[0].center.z = 2.0f;
+    sphere[0].radius = 0.3f;
     sphere[1].center.x = 0.0f;
     sphere[1].center.y = 0.0f;
-    sphere[1].center.z = -5.0f;
-    sphere[1].radius = 0.5f;
+    sphere[1].center.z = 0.0f;
+    sphere[1].radius = 0.3f;
+
+    unsigned int sphereColor[2];
+    for (int i = 0; i < 2; i++) {
+        sphereColor[i] = 0xFFFFFFFF;
+    }
 
     // ウィンドウの×ボタンが押されるまでループ
     while (Novice::ProcessMessage() == 0) {
@@ -591,10 +612,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         /// ↓更新処理ここから
         ///
 
-        // ウィンドウサイズ初期設定
-        ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Window");
-        // 項目パラメータをいじれるように
+        // ImGuiでの操作ウィンドウ
+        ImGui::SetNextWindowSize(ImVec2(200, 250), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Camera & Sphere Control");
+
+        // カメラのUI
+        ImGui::DragFloat3("Camera Position", &cameraTranslate.x, 0.1f);
+        ImGui::DragFloat3("Camera Rotation", &cameraRotate.x, 0.01f);
+
+        ImGui::Separator();
+
+        // 球の編集UI
         ImGui::DragFloat3("Sphere[0].Center", &sphere[0].center.x, 0.1f);
         ImGui::DragFloat("Sphere[0].Radius", &sphere[0].radius, 0.1f, 0.0f);
         ImGui::DragFloat3("Sphere[1].Center", &sphere[1].center.x, 0.1f);
@@ -608,8 +636,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
         Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
         Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-
+        IsCollision(sphere[0], sphere[1]);
         
+        if (IsCollision(sphere[0], sphere[1])) {
+            sphereColor[0] = 0xFF0000FF;
+        } else {
+            sphereColor[0] = 0xFFFFFFFF;
+        }
+
+
         ///
         /// ↑更新処理ここまで
         ///
@@ -620,7 +655,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         DrawGrid(viewProjectionMatrix, viewportMatrix);
         for (int i = 0; i < 2; i++) {
-            DrawSphere(sphere[i], viewProjectionMatrix, viewportMatrix, color);
+            DrawSphere(sphere[i], viewProjectionMatrix, viewportMatrix, sphereColor[i]);
         }
 
         ///

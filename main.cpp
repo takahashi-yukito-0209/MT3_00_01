@@ -561,7 +561,7 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 
 void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
 {
-    const float planeSize = 6.0f; // 平面の大きさ
+    const float planeSize = 3.0f; // 平面の大きさ
     const float halfSize = planeSize / 2.0f;
 
     // 平面の中心点（法線ベクトル * -d）

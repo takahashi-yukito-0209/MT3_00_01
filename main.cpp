@@ -602,27 +602,30 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 // 線と平面の交点を求める関数
 bool IsCollision(const Segment& segment, const Plane& plane, Vector3* intersection)
 {
+    // 法線ベクトルと線分の差分ベクトルの内積を計算
     float dotND = Dot(plane.normal, segment.diff);
 
-    // 平面と線分が平行（交点なし）
+    // 内積の絶対値が極めて小さい場合は交点なし
     if (fabsf(dotND) < 1e-6f) {
         return false;
     }
 
+    // 線分の起点から交点までの割合
     float t = -(Dot(plane.normal, segment.origin) + plane.distance) / dotND;
 
-    // 交点が線分の範囲外なら交差なし
+    // t が 0～1 の範囲外なら交点は線分の外にあるので交差なし
     if (t < 0.0f || t > 1.0f) {
         return false;
     }
 
+    // 交点の座標を計算
     if (intersection) {
         *intersection = Add(segment.origin, Multiply(t, segment.diff));
     }
 
+    // 交差したら
     return true;
 }
-
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -643,12 +646,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 線の定義
     Segment segment = {
         { 0.0f, 1.0f, 0.0f }, // 始点
-        { 0.0f, -2.0f, 0.0f } // 差分（Y軸に沿った下向きの線）
+        { 0.0f, -2.0f, 0.0f } // 差分
     };
 
     // 平面の定義（XZ平面）
     Plane plane = {
-        { 0.0f, 1.0f, 0.0f }, // 法線（Y軸方向）
+        { 0.0f, 1.0f, 0.0f }, // 法線
         0.0f // 原点を通る
     };
 
@@ -702,12 +705,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui::DragFloat3("Normal", &plane.normal.x, 0.01f);
         ImGui::DragFloat("Distance", &plane.distance, 0.01f);
 
+        // 正規化をしておく
+        plane.normal = Normalize(plane.normal);
+        
+        // 小さくなりすぎたらデフォルトに戻す
+        if (Length(plane.normal) < 0.001f) {
+            plane.normal = { 0.0f, 1.0f, 0.0f };
+        }
+
         ImGui::Separator();
 
         // 線のUI
         ImGui::Text("Segment");
         ImGui::DragFloat3("Origin", &segment.origin.x, 0.01f);
         ImGui::DragFloat3("Diff", &segment.diff.x, 0.01f);
+
+        // 線分の差分が短すぎる場合強制補正
+        if (Length(segment.diff) < 0.001f) {
+            segment.diff = { 0.0f, 1.0f, 0.0f };
+        }
 
         ImGui::End();
 

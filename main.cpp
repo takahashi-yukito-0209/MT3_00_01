@@ -537,7 +537,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     int prevMouseX = 0;
     int prevMouseY = 0;
 
-    // 感度（お好みで調整）
+    // 感度設定
     const float moveSpeed = 0.01f;
     const float rotateSpeed = 0.01f;
     const float zoomSpeed = 0.01f;
@@ -592,10 +592,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 cameraRotate.x += deltaY * rotateSpeed;
 
                 const float pitchLimit = 1.57f;
-                if (cameraRotate.x > pitchLimit)
+
+                if (cameraRotate.x > pitchLimit) {
                     cameraRotate.x = pitchLimit;
-                if (cameraRotate.x < -pitchLimit)
+                }
+
+                if (cameraRotate.x < -pitchLimit) {
                     cameraRotate.x = -pitchLimit;
+                }
             }
 
             // ホイール：ズーム

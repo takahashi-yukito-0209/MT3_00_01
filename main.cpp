@@ -14,10 +14,6 @@ struct Vector3 {
     Vector3 operator+(const Vector3& rhs) const { return { x + rhs.x, y + rhs.y, z + rhs.z }; }
     Vector3 operator-(const Vector3& rhs) const { return { x - rhs.x, y - rhs.y, z - rhs.z }; }
     Vector3 operator*(float scalar) const { return { x * scalar, y * scalar, z * scalar }; }
-
-    float LengthSq() const { return x * x + y * y + z * z; }
-
-    float dot(const Vector3& rhs) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
 };
 
 struct Matrix4x4 {

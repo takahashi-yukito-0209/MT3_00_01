@@ -539,7 +539,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     // 感度設定
     const float moveSpeed = 0.01f;
-    const float rotateSpeed = 0.01f;
+    const float rotateSpeed = 0.005f;
     const float zoomSpeed = 0.01f;
 
 

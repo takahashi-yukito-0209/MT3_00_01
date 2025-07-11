@@ -687,6 +687,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     char keys[256] = { 0 };
     char preKeys[256] = { 0 };
 
+    // マウス前フレーム座標
+    int prevMouseX = 0;
+    int prevMouseY = 0;
+
+    // 感度設定
+    const float moveSpeed = 0.01f;
+    const float rotateSpeed = 0.005f;
+    const float zoomSpeed = 0.01f;
+
     // カメラの位置と角度
     Vector3 cameraTranslate = { 0.0f, 1.9f, -6.49f };
     Vector3 cameraRotate = { 0.26f, 0.0f, 0.0f };
@@ -719,6 +728,53 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ///
         /// ↓更新処理ここから
         ///
+
+         // ImGuiで操作中ならカメラ操作をスキップ
+        if (!ImGui::IsAnyItemActive() && !ImGui::IsAnyItemHovered()) {
+            int mouseX, mouseY;
+            Novice::GetMousePosition(&mouseX, &mouseY);
+
+            int deltaX = mouseX - prevMouseX;
+            int deltaY = mouseY - prevMouseY;
+
+            int wheel = Novice::GetWheel();
+
+            // 左クリック：平行移動
+            if (Novice::IsPressMouse(0)) {
+                cameraTranslate.x -= deltaX * moveSpeed;
+                cameraTranslate.y += deltaY * moveSpeed;
+            }
+
+            // 右クリック：回転
+            if (Novice::IsPressMouse(1)) {
+                cameraRotate.y += deltaX * rotateSpeed;
+                cameraRotate.x += deltaY * rotateSpeed;
+
+                const float pitchLimit = 1.57f;
+
+                if (cameraRotate.x > pitchLimit) {
+                    cameraRotate.x = pitchLimit;
+                }
+
+                if (cameraRotate.x < -pitchLimit) {
+                    cameraRotate.x = -pitchLimit;
+                }
+            }
+
+            // ホイール：ズーム
+            cameraTranslate.z += -wheel * zoomSpeed;
+
+            // 座標保存
+            prevMouseX = mouseX;
+            prevMouseY = mouseY;
+        }
+
+        // カメラの位置初期化
+        if (keys[DIK_R] && !preKeys[DIK_R]) {
+            cameraTranslate = { 0.0f, 1.9f, -6.49f };
+            cameraRotate = { 0.26f, 0.0f, 0.0f };
+            cameraPosition = { 0.0f, 0.0f, -10.0f };
+        }
 
         Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
         Matrix4x4 viewMatrix = Inverse(cameraMatrix);

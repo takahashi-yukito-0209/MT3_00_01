@@ -698,8 +698,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
         DrawGrid(viewProjectionMatrix, viewportMatrix);
         DrawAABB(aabb, viewProjectionMatrix, viewportMatrix, aabbColor);
-        DrawGrid(viewProjectionMatrix, viewportMatrix);
-        DrawAABB(aabb, viewProjectionMatrix, viewportMatrix, aabbColor);
         DrawSphere(sphere, viewProjectionMatrix, viewportMatrix, sphereColor);
 
         ///

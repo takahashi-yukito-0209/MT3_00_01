@@ -1,7 +1,7 @@
 #include <Novice.h>
 #include <cmath>
 
-const char kWindowTitle[] = "LE2C_17_タカハシ_ユキト_MT4_01_01";
+const char kWindowTitle[] = "LE2B_15_タカハシ_ユキト_MT4_01_01";
 
 // 3次元ベクトル構造体
 typedef struct Vector3 {
